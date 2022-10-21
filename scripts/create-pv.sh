@@ -15,9 +15,11 @@
 # under the License.
 set -ex
 
-NODE_NAME=$(oc get node -o name -l node-role.kubernetes.io/worker | head -n 1)
-if [ -z "$NODE_NAME" ]; then
+NODE_NAMES=$(oc get node -o name -l node-role.kubernetes.io/worker)
+if [ -z "$NODE_NAMES" ]; then
   echo "Unable to determine node name with 'oc' command."
   exit 1
 fi
-oc debug $NODE_NAME -T -- chroot /host /usr/bin/bash -c "for i in {1..6}; do echo \"creating dir /mnt/openstack/pv00\$i\"; mkdir -p /mnt/openstack/pv00\$i; done"
+for node in $NODE_NAMES; do
+    oc debug $node -T -- chroot /host /usr/bin/bash -c "for i in {1..6}; do echo \"creating dir /mnt/openstack/pv00\$i on $node\"; mkdir -p /mnt/openstack/pv00\$i; done"
+done

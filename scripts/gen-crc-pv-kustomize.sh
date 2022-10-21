@@ -19,8 +19,8 @@ if [ ! -d out/crc ]; then
   mkdir -p out/crc
 fi
 
-NODE_NAME=$(oc get node -o name -l node-role.kubernetes.io/worker | head -n 1 | sed -e 's|node/||')
-if [ -z "$NODE_NAME" ]; then
+NODE_NAMES=$(oc get node -o name -l node-role.kubernetes.io/worker | sed -e 's|node/||' | head -c-1 | tr '\n' ',')
+if [ -z "$NODE_NAMES" ]; then
   echo "Unable to determine node name with 'oc' command."
   exit 1
 fi
@@ -31,8 +31,8 @@ resources:
 patches:
 - patch: |-
     - op: replace
-      path: /spec/nodeAffinity/required/nodeSelectorTerms/0/matchExpressions/0/values/0
-      value: $NODE_NAME
+      path: /spec/nodeAffinity/required/nodeSelectorTerms/0/matchExpressions/0/values
+      value: [${NODE_NAMES}]
   target:
     kind: PersistentVolume
 EOF_CAT
